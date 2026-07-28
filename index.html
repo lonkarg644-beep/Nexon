@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexon - Nearby Friends & Calling</title>
+    
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- PeerJS Free Calling Library -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #header {
+            background-color: #111827;
+            color: #38bdf8;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .brand {
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .search-box {
+            display: flex;
+            gap: 5px;
+        }
+        #search-input {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #374151;
+            background-color: #1f2937;
+            color: white;
+        }
+        #search-btn {
+            padding: 10px 15px;
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        #map {
+            flex-grow: 1;
+            width: 100%;
+        }
+        .call-btn {
+            background-color: #16a34a;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin-top: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+        .my-id-badge {
+            background-color: #374151;
+            color: #f3f4f6;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <div class="brand">
+            <span>⚡ NEXON</span>
+            <span class="my-id-badge" id="my-peer-id">Connecting...</span>
+        </div>
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Location daalein (e.g. Pulgaon, Amravati)...">
+            <button id="search-btn" onclick="searchLocation()">Search</button>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        var map = L.map('map').setView([20.5937, 78.9629], 5);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap | Nexon'
+        }).addTo(map);
+
+        // Initialize PeerJS for Real Free Calling
+        var peer = new Peer();
+
+        peer.on('open', function(id) {
+            document.getElementById('my-peer-id').innerText = "My ID: " + id.substring(0, 6);
+        });
+
+        // Incoming Call Handle
+        peer.on('call', function(call) {
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+                if(confirm("Incoming Nexon Call! Answer karein?")) {
+                    call.answer(stream);
+                    call.on('stream', function(remoteStream) {
+                        playAudio(remoteStream);
+                    });
+                }
+            });
+        });
+
+        // Mobile GPS Location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var lat = position.coords.latitude;
+                var lng = position.coords.longitude;
+
+                map.setView([lat, lng], 13);
+
+                L.marker([lat, lng]).addTo(map)
+                    .bindPopup('<b>Aap Yahan Hain! (Nexon User)</b>')
+                    .openPopup();
+
+                addNearbyUsers(lat, lng);
+            });
+        }
+
+        // Demo Nexon Users
+        function addNearbyUsers(userLat, userLng) {
+            var users = [
+                { name: "Rahul (Nexon User)", lat: userLat + 0.008, lng: userLng + 0.008 },
+                { name: "Priya (Nexon User)", lat: userLat - 0.008, lng: userLng - 0.008 }
+            ];
+
+            users.forEach(function(u) {
+                var popupContent = `
+                    <b>${u.name}</b><br>
+                    <button class="call-btn" onclick="makeCall()">📞 Free Audio Call</button>
+                `;
+                L.marker([u.lat, u.lng]).addTo(map).bindPopup(popupContent);
+            });
+        }
+
+        // Location Search
+        function searchLocation() {
+            var query = document.getElementById('search-input').value;
+            if (!query) return;
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        var lat = parseFloat(data[0].lat);
+                        var lon = parseFloat(data[0].lon);
+                        map.setView([lat, lon], 12);
+                        L.marker([lat, lon]).addTo(map).bindPopup(`<b>${data[0].display_name}</b>`).openPopup();
+                        addNearbyUsers(lat, lon);
+                    } else {
+                        alert("Location nahi mili!");
+                    }
+                });
+        }
+
+        // Real Call Function
+        function makeCall() {
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+                alert("Nexon Free Audio Call Connect ho rahi hai... Microphone permission allow karein.");
+            }).catch(function(err) {
+                alert("Microphone permission allow karein call karne ke liye.");
+            });
+        }
+
+        function playAudio(stream) {
+            var audio = document.createElement('audio');
+            audio.srcObject = stream;
+            audio.play();
+        }
+    </script>
+</body>
+</html>
