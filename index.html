@@ -1,407 +1,481 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIBE - Global Real-Time Social & Call Network</title>
-    
-    <!-- FontAwesome & PeerJS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Nexon - Social Network & Live Connect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-
     <style>
         :root {
-            --bg-color: #07090e;
-            --card-bg: rgba(18, 24, 38, 0.85);
-            --accent-gradient: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
-            --gold-gradient: linear-gradient(135deg, #f59e0b, #fbbf24, #d97706);
-            --green-online: #22c55e;
+            --bg-deep: #0b0f19;
+            --surface: #131b2e;
+            --surface-hover: #1e293b;
+            --primary: #3b82f6;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
             --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-deep);
             color: var(--text-main);
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            height: 60px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 100;
+        }
+
+        .brand-logo {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .app-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .view-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            background: var(--bg-deep);
+            overflow-y: auto;
             padding-bottom: 70px;
         }
 
-        /* Authentication Screen */
-        #auth-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(7, 9, 14, 0.98);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 9999; backdrop-filter: blur(20px);
+        .view-screen.active {
+            display: flex;
+        }
+
+        /* Google Login Screen */
+        #auth-screen {
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            background: radial-gradient(circle at center, #1e1b4b 0%, var(--bg-deep) 70%);
+            z-index: 300;
         }
 
         .auth-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            padding: 40px 25px; border-radius: 30px;
-            width: 90%; max-width: 400px; text-align: center;
-            box-shadow: 0 30px 60px -12px rgba(168, 85, 247, 0.3);
-        }
-
-        .auth-card input {
-            width: 100%; padding: 12px 16px; margin: 10px 0;
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px; color: #fff; font-size: 14px; outline: none;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 36px 24px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
 
         .google-btn {
-            background: #ffffff; color: #1e293b; border: none;
-            padding: 14px 20px; border-radius: 14px; font-weight: 700;
-            font-size: 15px; width: 100%; display: flex;
-            align-items: center; justify-content: center; gap: 12px;
-            cursor: pointer; margin-top: 15px;
-        }
-
-        /* Top Header */
-        #top-header {
-            position: sticky; top: 0;
-            background: rgba(7, 9, 14, 0.95);
-            backdrop-filter: blur(15px); padding: 12px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            z-index: 100; display: flex; flex-direction: column; gap: 10px;
-        }
-
-        .nav-brand { display: flex; align-items: center; justify-content: space-between; }
-
-        .logo-text {
-            font-size: 24px; font-weight: 900; letter-spacing: 1px;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        .get-vip-btn {
-            background: var(--gold-gradient); color: #000;
-            border: none; padding: 6px 12px; border-radius: 12px;
-            font-weight: 800; font-size: 11px; cursor: pointer;
-            box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
-            display: flex; align-items: center; gap: 4px;
-        }
-
-        .my-id-badge {
-            background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7;
-            color: #ec4899; padding: 6px 12px; border-radius: 12px;
-            font-size: 12px; font-weight: bold; display: flex;
-            align-items: center; justify-content: space-between;
-        }
-
-        /* Story Bar */
-        .story-container {
-            display: flex; gap: 12px; padding: 10px 16px;
-            overflow-x: auto; background: rgba(255, 255, 255, 0.02);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .story-container::-webkit-scrollbar { display: none; }
-
-        .story-ring {
-            width: 60px; height: 60px; border-radius: 50%;
-            background: var(--accent-gradient); padding: 2px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; flex-shrink: 0;
-        }
-        .story-ring img {
-            width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
-            border: 2px solid var(--bg-color);
-        }
-
-        /* Search Feed */
-        .search-box { position: relative; width: 100%; margin-top: 4px; }
-        .search-box input {
-            width: 100%; padding: 10px 16px 10px 40px;
-            border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05); color: #fff; font-size: 13px; outline: none;
-        }
-        .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-
-        /* Main Grid Cards */
-        .container {
-            padding: 16px; display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 14px;
-        }
-
-        .vibe-card {
-            background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px; padding: 14px; display: flex;
-            flex-direction: column; align-items: center; text-align: center; position: relative;
+            width: 100%;
+            padding: 14px;
+            background: white;
+            color: #1e293b;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             transition: transform 0.2s;
         }
-        .vibe-card.vip-card { border: 2px solid #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.15); }
+        .google-btn:active { transform: scale(0.98); }
 
-        .avatar-wrapper { position: relative; margin-bottom: 8px; }
-        .avatar-wrapper img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid #a855f7; }
-        .vip-card .avatar-wrapper img { border: 3px solid #fbbf24; }
-
-        .online-dot {
-            width: 12px; height: 12px; background: var(--green-online); border-radius: 50%;
-            position: absolute; bottom: 2px; right: 2px; border: 2px solid var(--bg-color);
+        /* Post Creation Card */
+        .create-post-card {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px;
+            margin-bottom: 12px;
         }
 
-        .user-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; display: flex; align-items: center; gap: 4px; }
-        .user-id { font-size: 11px; color: #a855f7; margin-bottom: 4px; }
-        .user-bio { font-size: 11px; color: #94a3b8; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-
-        .location-badge {
-            font-size: 10px; color: #38bdf8; background: rgba(56, 189, 248, 0.1);
-            padding: 2px 8px; border-radius: 8px; margin-bottom: 10px;
-            display: flex; align-items: center; gap: 4px;
+        .create-post-card textarea {
+            width: 100%;
+            height: 70px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            resize: none;
+            outline: none;
+            margin-bottom: 10px;
         }
 
-        .action-grid { display: flex; gap: 6px; width: 100%; }
-        .action-btn {
-            flex: 1; background: rgba(255, 255, 255, 0.06); color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px; border-radius: 10px;
-            font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
+        .post-btn {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            float: right;
         }
-        .action-btn.call { background: var(--accent-gradient); border: none; }
 
-        /* Bottom Nav Bar */
+        /* Post Card */
+        .post-card {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+            padding: 16px;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .avatar-img {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+
+        .post-content {
+            font-size: 15px;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .post-image {
+            width: 100%;
+            border-radius: 12px;
+            max-height: 350px;
+            object-fit: cover;
+            margin-bottom: 12px;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .post-action-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .post-action-btn:hover, .post-action-btn.liked {
+            color: var(--primary);
+        }
+
+        /* Radar Users Grid */
+        .radar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            padding: 16px;
+        }
+
+        .user-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn-call { background: var(--success); color: white; }
+
+        /* Navigation Bar */
         .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(7, 9, 14, 0.95); backdrop-filter: blur(15px);
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex; justify-content: space-around; padding: 12px 0;
-            z-index: 100;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: none;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 200;
         }
-        .nav-item { color: #94a3b8; font-size: 18px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; }
-        .nav-item i { font-size: 18px; }
-        .nav-item.active { color: #ec4899; }
 
-        /* Video/Audio Call Full Screen Modal */
-        #call-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 99999; display: none;
-            flex-direction: column; align-items: center; justify-content: space-between; padding: 40px 20px;
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 11px;
+            gap: 4px;
+            cursor: pointer;
         }
-        .call-avatar-lg { width: 120px; height: 120px; border-radius: 50%; border: 4px solid #a855f7; object-fit: cover; margin-top: 60px; }
+
+        .nav-item.active { color: var(--primary); }
+
+        /* Profile Screen */
+        .profile-box {
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .profile-dp {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            object-fit: cover;
+            margin: 0 auto 16px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Setup / Login Screen -->
-    <div id="auth-overlay">
+    <!-- GOOGLE LOGIN SCREEN -->
+    <div id="auth-screen" class="view-screen active">
         <div class="auth-card">
-            <h1 class="logo-text" style="font-size:38px; margin-bottom:5px;">VIBE</h1>
-            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 20px;">Next-Gen Peer-to-Peer Global Network</p>
-            
-            <input type="text" id="input-name" placeholder="Enter Your Name (e.g. Rahul Verma)">
-            <input type="text" id="input-bio" placeholder="Your Vibe Bio (e.g. Exploring Pune ✨)">
-            
-            <button class="google-btn" onclick="completeLogin()">
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="20">
-                Sign In with Google
+            <h2 style="font-size: 26px; margin-bottom: 8px; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Nexon</h2>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Connect instantly with real people nearby.</p>
+            <button class="google-btn" onclick="loginWithGoogle()">
+                <i class="fa-brands fa-google" style="color: #ea4335; font-size: 18px;"></i> Continue with Google
             </button>
         </div>
     </div>
 
-    <!-- Header Section -->
-    <div id="top-header">
-        <div class="nav-brand">
-            <div class="logo-text">VIBE</div>
-            <button class="get-vip-btn" onclick="upgradeVIP()"><i class="fa-solid fa-crown"></i> VIP PASS</button>
+    <header>
+        <div class="brand-logo"><i class="fa-solid fa-globe"></i> Nexon</div>
+        <div style="font-size: 12px; color: var(--success); display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> Online</div>
+    </header>
+
+    <div class="app-container">
+
+        <!-- 1. POSTS & FEED SCREEN -->
+        <div id="feed-screen" class="view-screen">
+            <div class="create-post-card">
+                <textarea id="new-post-text" placeholder="What's happening nearby? Share a post..."></textarea>
+                <button class="post-btn" onclick="addNewPost()"><i class="fa-solid fa-paper-plane"></i> Post</button>
+                <div style="clear: both;"></div>
+            </div>
+
+            <div id="posts-container"></div>
         </div>
 
-        <div class="my-id-badge">
-            <span>My ID: <strong id="display-my-id" style="color:#fff;">Connecting...</strong></span>
-            <i class="fa-regular fa-copy" style="cursor:pointer;" onclick="copyMyId()"></i>
+        <!-- 2. NEARBY RADAR SCREEN -->
+        <div id="radar-screen" class="view-screen">
+            <div style="padding: 16px 16px 0; font-size: 14px; font-weight: bold; color: var(--text-muted);">
+                NEARBY USERS (GPS ACTIVE)
+            </div>
+            <div class="radar-grid" id="radar-users-list"></div>
         </div>
 
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="search-input" placeholder="Search City, Name or Vibe ID..." oninput="filterProfiles()">
+        <!-- 3. PROFILE SCREEN -->
+        <div id="profile-screen" class="view-screen">
+            <div class="profile-box">
+                <img id="my-profile-dp" class="profile-dp" src="" alt="DP">
+                <h2 id="my-profile-name" style="font-size: 20px; margin-bottom: 4px;">User</h2>
+                <p id="my-profile-email" style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">user@gmail.com</p>
+                <div style="background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: 12px; text-align: left;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Nexon Status</div>
+                    <div style="font-size: 14px; font-weight: bold; color: var(--success);">Account Verified & Active 🚀</div>
+                </div>
+            </div>
         </div>
+
     </div>
 
-    <!-- Story Bar (Status / Highlights) -->
-    <div class="story-container" id="story-bar">
-        <!-- Dynamic Stories -->
-    </div>
-
-    <!-- Profiles Feed Grid -->
-    <div class="container" id="user-feed"></div>
-
-    <!-- Bottom Navigation Bar -->
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('explore')"><i class="fa-solid fa-compass"></i>Explore</div>
-        <div class="nav-item" onclick="alert('Map Radar: 5 Active Users nearby in your city!')"><i class="fa-solid fa-map-location-dot"></i>Radar</div>
-        <div class="nav-item" onclick="alert('Stories feature active!')"><i class="fa-solid fa-circle-notch"></i>Stories</div>
-        <div class="nav-item" onclick="alert('Profile settings loaded successfully.')"><i class="fa-solid fa-user"></i>Profile</div>
-    </div>
-
-    <!-- Call Overlay Screen -->
-    <div id="call-screen">
-        <div style="text-align: center;">
-            <p id="call-status" style="color: #38bdf8; font-weight: bold; font-size: 16px;">Connecting Call...</p>
-            <img id="call-target-img" class="call-avatar-lg" src="">
-            <h2 id="call-target-name" style="margin-top: 15px;">User Name</h2>
-        </div>
-        <button onclick="endCall()" style="background: #ef4444; color: white; border: none; padding: 14px 30px; border-radius: 30px; font-weight: bold; cursor: pointer;"><i class="fa-solid fa-phone-slash"></i> End Call</label>
-    </div>
-
-    <audio id="remote-audio" autoplay></audio>
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" id="bottom-nav-bar">
+        <button class="nav-item active" onclick="switchTab('feed-screen', this)">
+            <i class="fa-solid fa-newspaper" style="font-size: 18px;"></i>
+            <span>Posts</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('radar-screen', this)">
+            <i class="fa-solid fa-radar" style="font-size: 18px;"></i>
+            <span>Nearby</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('profile-screen', this)">
+            <i class="fa-solid fa-user" style="font-size: 18px;"></i>
+            <span>Profile</span>
+        </button>
+    </nav>
 
     <script>
-        var currentUser = null;
-        var myPeer = null;
-        var activeCall = null;
+        let currentUser = {
+            name: "Alex Morgan",
+            email: "alex.morgan@gmail.com",
+            dp: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
+        };
 
-        var activeUsers = [
-            { id: "rohit_vibe", name: "Rohit Sharma", bio: "Tech & Music 🎧", location: "Pune", photo: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150", isVip: true },
-            { id: "priya_vibe", name: "Priya Patel", bio: "Coffee & Books ☕", location: "Mumbai", photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150", isVip: false },
-            { id: "alex_vibe", name: "Alex Mercer", bio: "Gaming & Coding 💻", location: "Nagpur", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150", isVip: true },
-            { id: "sneha_vibe", name: "Sneha Roy", bio: "Traveler 🌍", location: "Pune", photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150", isVip: false },
-            { id: "vikram_vibe", name: "Vikram Patil", bio: "Fitness & Vibe 🔥", location: "Amravati", photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150", isVip: false }
+        let posts = [
+            {
+                id: 1,
+                author: "Nexon Community",
+                dp: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150",
+                time: "2 mins ago",
+                text: "Welcome to Nexon! Explore posts or connect with nearby active users.",
+                image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600",
+                likes: 24,
+                liked: false
+            }
         ];
 
-        function completeLogin() {
-            var nameInput = document.getElementById('input-name').value.trim();
-            var bioInput = document.getElementById('input-bio').value.trim();
+        let nearbyUsers = [
+            { id: "user_1", name: "Ananya Roy", dp: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150", dist: "0.8 km" },
+            { id: "user_2", name: "Vikram Mehta", dp: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150", dist: "1.2 km" }
+        ];
 
-            if(!nameInput) {
-                alert("Please enter your name!");
-                return;
-            }
+        function loginWithGoogle() {
+            // Instant seamless google profile simulation
+            document.getElementById('auth-screen').classList.remove('active');
+            document.getElementById('feed-screen').classList.add('active');
+            document.getElementById('bottom-nav-bar').style.display = 'flex';
 
-            var cleanId = nameInput.toLowerCase().replace(/\s+/g, '_') + "_" + Math.floor(100 + Math.random() * 900);
+            // Set Profile Data
+            document.getElementById('my-profile-dp').src = currentUser.dp;
+            document.getElementById('my-profile-name').innerText = currentUser.name;
+            document.getElementById('my-profile-email').innerText = currentUser.email;
 
-            currentUser = {
-                name: nameInput,
-                id: cleanId,
-                bio: bioInput || "Exploring VIBE Network ✨",
-                location: "Pune",
-                photo: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
-                isVip: false
-            };
-
-            document.getElementById('display-my-id').innerText = currentUser.id;
-            document.getElementById('auth-overlay').style.display = 'none';
-
-            initPeerConnection();
-            renderStories();
-            renderProfiles(activeUsers);
+            renderPosts();
+            renderNearbyUsers();
         }
 
-        function initPeerConnection() {
-            myPeer = new Peer(currentUser.id);
-
-            myPeer.on('open', function(id) {
-                document.getElementById('display-my-id').innerText = id;
-            });
-
-            myPeer.on('call', function(call) {
-                navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
-                    if (confirm("Incoming Call on VIBE! Accept?")) {
-                        activeCall = call;
-                        call.answer(stream);
-                        showCallScreen("Incoming Live Call...", "Caller", "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150");
-                        call.on('stream', function(remoteStream) {
-                            var audioElem = document.getElementById('remote-audio');
-                            audioElem.srcObject = remoteStream;
-                            audioElem.play();
-                        });
-                    }
-                });
-            });
-        }
-
-        function renderStories() {
-            var bar = document.getElementById('story-bar');
-            bar.innerHTML = "";
-            activeUsers.forEach(function(user) {
-                var ring = document.createElement('div');
-                ring.className = "story-ring";
-                ring.innerHTML = `<img src="${user.photo}" title="${user.name}'s Story">`;
-                ring.onclick = function() { alert("Viewing " + user.name + "'s 24hr Vibe Story!"); };
-                bar.appendChild(ring);
-            });
-        }
-
-        function renderProfiles(list) {
-            var feed = document.getElementById('user-feed');
-            feed.innerHTML = "";
-
-            list.forEach(function(user) {
-                var card = document.createElement('div');
-                card.className = "vibe-card " + (user.isVip ? "vip-card" : "");
-                var vipBadge = user.isVip ? `<i class="fa-solid fa-circle-check" style="color:#fbbf24;"></i>` : "";
-
-                card.innerHTML = `
-                    <div class="avatar-wrapper">
-                        <img src="${user.photo}">
-                        <div class="online-dot"></div>
+        function renderPosts() {
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+            posts.forEach(p => {
+                const postEl = document.createElement('div');
+                postEl.className = 'post-card';
+                postEl.innerHTML = `
+                    <div class="post-header">
+                        <img src="${p.dp}" class="avatar-img" />
+                        <div>
+                            <div style="font-weight: bold; font-size: 14px;">${p.author}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">${p.time}</div>
+                        </div>
                     </div>
-                    <div class="user-name">${user.name} ${vipBadge}</div>
-                    <div class="user-id">@${user.id}</div>
-                    <div class="user-bio">${user.bio}</div>
-                    <div class="location-badge"><i class="fa-solid fa-location-dot"></i> ${user.location}</div>
-                    <div class="action-grid">
-                        <button class="action-btn call" onclick="startCall('${user.id}', '${user.name}', '${user.photo}')"><i class="fa-solid fa-phone"></i> Call</button>
-                        <button class="action-btn" onclick="openChat('${user.name}')"><i class="fa-solid fa-message"></i></button>
+                    <div class="post-content">${p.text}</div>
+                    ${p.image ? `<img src="${p.image}" class="post-image" />` : ''}
+                    <div class="post-actions">
+                        <button class="post-action-btn ${p.liked ? 'liked' : ''}" onclick="toggleLike(${p.id})">
+                            <i class="fa-solid fa-heart"></i> ${p.likes} Likes
+                        </button>
+                        <button class="post-action-btn"><i class="fa-solid fa-comment"></i> Comment</button>
                     </div>
                 `;
-                feed.appendChild(card);
+                container.appendChild(postEl);
             });
         }
 
-        function filterProfiles() {
-            var query = document.getElementById('search-input').value.toLowerCase();
-            var filtered = activeUsers.filter(function(u) {
-                return u.name.toLowerCase().includes(query) || u.id.toLowerCase().includes(query) || u.location.toLowerCase().includes(query);
+        function addNewPost() {
+            const textInput = document.getElementById('new-post-text');
+            const val = textInput.value.trim();
+            if(!val) return;
+
+            posts.unshift({
+                id: Date.now(),
+                author: currentUser.name,
+                dp: currentUser.dp,
+                time: "Just now",
+                text: val,
+                image: "",
+                likes: 0,
+                liked: false
             });
-            renderProfiles(filtered);
+
+            textInput.value = '';
+            renderPosts();
         }
 
-        function startCall(targetId, targetName, targetPhoto) {
-            navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
-                showCallScreen("Calling " + targetName + "...", targetName, targetPhoto);
-                var call = myPeer.call(targetId, stream);
-                activeCall = call;
-                call.on('stream', function(remoteStream) {
-                    var audioElem = document.getElementById('remote-audio');
-                    audioElem.srcObject = remoteStream;
-                    audioElem.play();
-                });
-            }).catch(function() {
-                alert("Microphone permission required for calling.");
+        function toggleLike(id) {
+            const post = posts.find(p => p.id === id);
+            if(post) {
+                post.liked = !post.liked;
+                post.likes += post.liked ? 1 : -1;
+                renderPosts();
+            }
+        }
+
+        function renderNearbyUsers() {
+            const grid = document.getElementById('radar-users-list');
+            grid.innerHTML = '';
+            nearbyUsers.forEach(u => {
+                const card = document.createElement('div');
+                card.className = 'user-card';
+                card.innerHTML = `
+                    <img src="${u.dp}" class="avatar-img" style="margin: 0 auto 8px;" />
+                    <div style="font-weight: bold; font-size: 13px;">${u.name}</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">${u.dist} away</div>
+                    <button class="btn-sm btn-call" onclick="alert('Calling ${u.name}...')"><i class="fa-solid fa-phone"></i> Call</button>
+                `;
+                grid.appendChild(card);
             });
         }
 
-        function showCallScreen(statusText, name, photo) {
-            document.getElementById('call-status').innerText = statusText;
-            document.getElementById('call-target-name').innerText = name;
-            document.getElementById('call-target-img').src = photo;
-            document.getElementById('call-screen').style.display = 'flex';
-        }
-
-        function endCall() {
-            if(activeCall) activeCall.close();
-            document.getElementById('call-screen').style.display = 'none';
-        }
-
-        function openChat(name) {
-            var msg = prompt("Send direct message to " + name + ":");
-            if(msg) alert("Message sent successfully to " + name + "!");
-        }
-
-        function upgradeVIP() {
-            alert("👑 VIBE VIP Gold Pass Unlocked!\n- Gold Verified Badge\n- Global Radar Access\n- Priority Calling Lines");
-            currentUser.isVip = true;
-            document.getElementById('display-my-id').innerHTML = currentUser.id + " <i class='fa-solid fa-circle-check' style='color:#fbbf24;'></i>";
-        }
-
-        function copyMyId() {
-            var idText = document.getElementById('display-my-id').innerText;
-            navigator.clipboard.writeText(idText);
-            alert("Copied ID: " + idText);
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
         }
     </script>
 </body>
-    </html>
-    
+</html>
