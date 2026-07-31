@@ -1,1 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexon - Live Connect & Nearby Network</title>
+    <meta name="description" content="Connect with people near you using live GPS and real-time audio connect.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        :root {
+            --bg-deep: #0a0e17;
+            --surface: #111827;
+            --surface-hover: #1f2937;
+            --primary: #2563eb;
+            --accent: #7c3aed;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.1);
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            height: 60px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 100;
+        }
+
+        .brand-logo {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .share-btn {
+            background: rgba(37, 99, 235, 0.2);
+            color: #60a5fa;
+            border: 1px solid var(--primary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .app-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .view-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            background: var(--bg-deep);
+            overflow-y: auto;
+            padding-bottom: 70px;
+        }
+
+        .view-screen.active {
+            display: flex;
+        }
+
+        /* Authentication & Profile Setup Screen */
+        #auth-screen {
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: radial-gradient(circle at center, #1e1b4b 0%, var(--bg-deep) 80%);
+            z-index: 300;
+        }
+
+        .auth-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 28px 20px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 12px;
+            outline: none;
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* Search Bar */
+        .search-box-container {
+            padding: 12px 16px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input-wrapper i {
+            position: absolute;
+            left: 12px;
+            color: var(--text-muted);
+        }
+
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: white;
+            font-size: 13px;
+            outline: none;
+        }
+
+        /* GPS Status Banner */
+        .gps-banner {
+            padding: 10px 16px;
+            background: rgba(16, 185, 129, 0.1);
+            border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Feed Screen */
+        .create-post-card {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px;
+            margin-bottom: 10px;
+        }
+
+        .create-post-card textarea {
+            width: 100%;
+            height: 70px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            resize: none;
+            outline: none;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .post-btn {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border: none;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            float: right;
+        }
+
+        .post-card {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 12px;
+            padding: 16px;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .avatar-img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+
+        .post-content {
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .post-action-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .post-action-btn.liked { color: var(--primary); }
+
+        /* Nearby Grid */
+        .radar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            padding: 16px;
+        }
+
+        .user-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 12px;
+            text-align: center;
+            position: relative;
+        }
+
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            border: 2px solid var(--surface);
+        }
+
+        .btn-call {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            background: var(--success);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* Profile Screen */
+        .profile-box {
+            padding: 24px 20px;
+            text-align: center;
+        }
+        .profile-dp {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            object-fit: cover;
+            margin: 0 auto 12px;
+        }
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+        .bio-text {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin: 8px 0 16px;
+            line-height: 1.4;
+        }
+        .edit-profile-btn {
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Realistic Call Overlay */
+        #call-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 60px 24px 40px;
+            text-align: center;
+        }
+
+        .call-caller-dp {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.4);
+            margin-bottom: 20px;
+        }
+
+        .call-actions-row {
+            display: flex;
+            gap: 24px;
+        }
+        .call-btn-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            color: white;
+        }
+
+        /* Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: none;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 11px;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .nav-item.active { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <!-- USER SETUP & LOGIN SCREEN -->
+    <div id="auth-screen" class="view-screen active">
+        <div class="auth-card">
+            <h2 style="font-size: 26px; margin-bottom: 6px; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Nexon</h2>
+            <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 20px;">Create your profile to join nearby network</p>
+
+            <input type="text" id="setup-name" class="input-field" placeholder="Full Name" value="Ganesh Lonkar">
+            <input type="text" id="setup-location" class="input-field" placeholder="City / Location" value="Pulgaon">
+            <input type="text" id="setup-bio" class="input-field" placeholder="Short Bio" value="Mechanical Engineer | Exploring Nexon">
+            <input type="text" id="setup-dp" class="input-field" placeholder="Image URL (Optional)" value="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150">
+
+            <button class="google-btn" onclick="initializeUserProfile()">
+                <i class="fa-solid fa-right-to-bracket"></i> Continue to App
+            </button>
+        </div>
+    </div>
+
+    <header>
+        <div class="brand-logo"><i class="fa-solid fa-globe"></i> Nexon</div>
+        <button class="share-btn" onclick="shareNexonApp()"><i class="fa-solid fa-share-nodes"></i> Share App</button>
+    </header>
+
+    <div class="app-container">
+
+        <!-- 1. POSTS & FEED SCREEN -->
+        <div id="feed-screen" class="view-screen">
+            <div class="create-post-card">
+                <textarea id="new-post-text" placeholder="Share what's happening around you..."></textarea>
+                <button class="post-btn" onclick="addNewPost()"><i class="fa-solid fa-paper-plane"></i> Post</button>
+                <div style="clear: both;"></div>
+            </div>
+            <div id="posts-container"></div>
+        </div>
+
+        <!-- 2. NEARBY RADAR SCREEN WITH GPS & SEARCH -->
+        <div id="radar-screen" class="view-screen">
+            <div class="gps-banner" id="gps-status-box">
+                <span><i class="fa-solid fa-location-crosshairs"></i> <span id="gps-text">Fetching live GPS location...</span></span>
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <div class="search-box-container">
+                <div class="search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="search-input" onkeyup="filterUsers()" placeholder="Search by name, city, or distance...">
+                </div>
+            </div>
+
+            <div class="radar-grid" id="radar-users-list"></div>
+        </div>
+
+        <!-- 3. PROFILE SCREEN -->
+        <div id="profile-screen" class="view-screen">
+            <div class="profile-box">
+                <img id="my-profile-dp" class="profile-dp" src="" alt="DP">
+                <h2 id="my-profile-name" style="font-size: 20px;">User Name</h2>
+                <p id="my-profile-location" style="font-size: 12px; color: var(--primary); margin-top: 4px;"><i class="fa-solid fa-location-dot"></i> Location</p>
+                <p id="my-profile-bio" class="bio-text">User Bio</p>
+                <button class="edit-profile-btn" onclick="editBio()"><i class="fa-solid fa-pen"></i> Edit Profile</button>
+
+                <div class="profile-stats">
+                    <div>
+                        <div style="font-size: 18px; font-weight: bold;" id="post-count">1</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Posts</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 18px; font-weight: bold;">42</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Connections</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 18px; font-weight: bold;">15</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Nearby</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CALL OVERLAY -->
+    <div id="call-screen">
+        <div>
+            <div style="font-size: 12px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;" id="call-status-label">NEXON LIVE CALL</div>
+            <h2 id="call-target-name" style="font-size: 24px;">Connecting...</h2>
+        </div>
+
+        <div>
+            <img id="call-target-dp" class="call-caller-dp" src="" alt="Caller">
+        </div>
+
+        <div class="call-actions-row">
+            <button class="call-btn-circle" style="background: var(--surface-hover);"><i class="fa-solid fa-microphone-slash"></i></button>
+            <button class="call-btn-circle" style="background: var(--danger);" onclick="endCall()"><i class="fa-solid fa-phone-slash"></i></button>
+            <button class="call-btn-circle" style="background: var(--surface-hover);"><i class="fa-solid fa-volume-high"></i></button>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="bottom-nav" id="bottom-nav-bar">
+        <button class="nav-item active" onclick="switchTab('feed-screen', this)">
+            <i class="fa-solid fa-newspaper" style="font-size: 18px;"></i>
+            <span>Feed</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('radar-screen', this)">
+            <i class="fa-solid fa-radar" style="font-size: 18px;"></i>
+            <span>Nearby</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('profile-screen', this)">
+            <i class="fa-solid fa-user" style="font-size: 18px;"></i>
+            <span>Profile</span>
+        </button>
+    </nav>
+
+    <script>
+        let currentUser = {
+            name: "",
+            location: "",
+            bio: "",
+            dp: ""
+        };
+
+        let activeNearbyUsers = [
+            { id: "u1", name: "Rahul Sharma", location: "Pulgaon", dist: "0.4 km away", dp: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" },
+            { id: "u2", name: "Priya Patel", location: "Wardha", dist: "1.8 km away", dp: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150" },
+            { id: "u3", name: "Amit Verma", location: "Nagpur", dist: "3.2 km away", dp: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150" }
+        ];
+
+        let posts = [];
+        let audioCtx = null;
+        let ringInterval = null;
+
+        function getLiveGPSLocation() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude.toFixed(4);
+                        const lon = position.coords.longitude.toFixed(4);
+                        document.getElementById('gps-text').innerText = `GPS Active: ${lat}, ${lon} (${currentUser.location})`;
+                    },
+                    (error) => {
+                        document.getElementById('gps-text').innerText = `Location: ${currentUser.location} (GPS Permission Denied)`;
+                    }
+                );
+            } else {
+                document.getElementById('gps-text').innerText = `Location: ${currentUser.location}`;
+            }
+        }
+
+        function initializeUserProfile() {
+            const nameInput = document.getElementById('setup-name').value.trim();
+            const locInput = document.getElementById('setup-location').value.trim();
+            const bioInput = document.getElementById('setup-bio').value.trim();
+            const dpInput = document.getElementById('setup-dp').value.trim();
+
+            if (!nameInput || !locInput) {
+                alert("Please enter Name and Location!");
+                return;
+            }
+
+            currentUser.name = nameInput;
+            currentUser.location = locInput;
+            currentUser.bio = bioInput || "Connecting on Nexon";
+            currentUser.dp = dpInput || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150";
+
+            document.getElementById('auth-screen').classList.remove('active');
+            document.getElementById('feed-screen').classList.add('active');
+            document.getElementById('bottom-nav-bar').style.display = 'flex';
+
+            document.getElementById('my-profile-dp').src = currentUser.dp;
+            document.getElementById('my-profile-name').innerText = currentUser.name;
+            document.getElementById('my-profile-location').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${currentUser.location}`;
+            document.getElementById('my-profile-bio').innerText = currentUser.bio;
+
+            posts.push({
+                id: Date.now(),
+                author: currentUser.name,
+                location: currentUser.location,
+                dp: currentUser.dp,
+                time: "Just now",
+                text: `Hello everyone! Joined Nexon from ${currentUser.location}. Connect with me!`,
+                likes: 1,
+                liked: true
+            });
+
+            renderPosts();
+            renderNearbyUsers(activeNearbyUsers);
+            getLiveGPSLocation();
+        }
+
+        function renderNearbyUsers(users) {
+            const grid = document.getElementById('radar-users-list');
+            grid.innerHTML = '';
+            
+            if (users.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 20px;">No users found matching search.</div>`;
+                return;
+            }
+
+            users.forEach(u => {
+                const card = document.createElement('div');
+                card.className = 'user-card';
+                card.innerHTML = `
+                    <div class="online-dot"></div>
+                    <img src="${u.dp}" class="avatar-img" style="margin: 0 auto 8px;" />
+                    <div style="font-weight: bold; font-size: 13px;">${u.name}</div>
+                    <div style="font-size: 11px; color: var(--primary); margin-top: 2px;">${u.location}</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">${u.dist}</div>
+                    <button class="btn-call" onclick="startCall('${u.name}', '${u.dp}')"><i class="fa-solid fa-phone"></i> Call</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterUsers() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filtered = activeNearbyUsers.filter(u => 
+                u.name.toLowerCase().includes(query) || 
+                u.location.toLowerCase().includes(query) ||
+                u.dist.toLowerCase().includes(query)
+            );
+            renderNearbyUsers(filtered);
+        }
+
+        function renderPosts() {
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+            posts.forEach(p => {
+                const postEl = document.createElement('div');
+                postEl.className = 'post-card';
+                postEl.innerHTML = `
+                    <div class="post-header">
+                        <img src="${p.dp}" class="avatar-img" />
+                        <div>
+                            <div style="font-weight: bold; font-size: 14px;">${p.author}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">${p.location} • ${p.time}</div>
+                        </div>
+                    </div>
+                    <div class="post-content">${p.text}</div>
+                    <div class="post-actions">
+                        <button class="post-action-btn ${p.liked ? 'liked' : ''}" onclick="toggleLike(${p.id})">
+                            <i class="fa-solid fa-heart"></i> ${p.likes} Likes
+                        </button>
+                        <button class="post-action-btn"><i class="fa-solid fa-comment"></i> Comment</button>
+                    </div>
+                `;
+                container.appendChild(postEl);
+            });
+            document.getElementById('post-count').innerText = posts.length;
+        }
+
+        function addNewPost() {
+            const textInput = document.getElementById('new-post-text');
+            const val = textInput.value.trim();
+            if(!val) return;
+
+            posts.unshift({
+                id: Date.now(),
+                author: currentUser.name,
+                location: currentUser.location,
+                dp: currentUser.dp,
+                time: "Just now",
+                text: val,
+                likes: 0,
+                liked: false
+            });
+
+            textInput.value = '';
+            renderPosts();
+        }
+
+        function toggleLike(id) {
+            const post = posts.find(p => p.id === id);
+            if(post) {
+                post.liked = !post.liked;
+                post.likes += post.liked ? 1 : -1;
+                renderPosts();
+            }
+        }
+
+        function playDialTone() {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            ringInterval = setInterval(() => {
+                if(!audioCtx) return;
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.2);
+            }, 3000);
+        }
+
+        function stopDialTone() {
+            if(ringInterval) clearInterval(ringInterval);
+        }
+
+        function startCall(userName, userDp) {
+            document.getElementById('call-target-name').innerText = userName;
+            document.getElementById('call-target-dp').src = userDp;
+            document.getElementById('call-status-label').innerText = "CALLING (VOICE CONNECT)...";
+            document.getElementById('call-screen').style.display = 'flex';
+            playDialTone();
+        }
+
+        function endCall() {
+            stopDialTone();
+            document.getElementById('call-screen').style.display = 'none';
+        }
+
+        function editBio() {
+            let newBio = prompt("Enter new Bio:", currentUser.bio);
+            if(newBio) {
+                currentUser.bio = newBio;
+                document.getElementById('my-profile-bio').innerText = newBio;
+            }
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.view-screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function shareNexonApp() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Nexon - Social Network',
+                    text: 'Connect with nearby people live on Nexon!',
+                    url: window.location.href
+                });
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert('App link copied!');
+            }
+        }
+    </script>
+</body>
+</html>
