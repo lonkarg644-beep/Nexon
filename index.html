@@ -59,6 +59,20 @@
             gap: 8px;
         }
 
+        .share-btn {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .app-container {
             flex: 1;
             position: relative;
@@ -120,11 +134,9 @@
             gap: 12px;
             margin-top: 24px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
         }
-        .google-btn:active { transform: scale(0.98); }
 
-        /* Post Creation Card */
+        /* Feed Screen */
         .create-post-card {
             background: var(--surface);
             border-bottom: 1px solid var(--border);
@@ -156,7 +168,6 @@
             float: right;
         }
 
-        /* Post Card */
         .post-card {
             background: var(--surface);
             border-top: 1px solid var(--border);
@@ -186,14 +197,6 @@
             margin-bottom: 12px;
         }
 
-        .post-image {
-            width: 100%;
-            border-radius: 12px;
-            max-height: 350px;
-            object-fit: cover;
-            margin-bottom: 12px;
-        }
-
         .post-actions {
             display: flex;
             justify-content: space-around;
@@ -213,9 +216,7 @@
             cursor: pointer;
         }
 
-        .post-action-btn:hover, .post-action-btn.liked {
-            color: var(--primary);
-        }
+        .post-action-btn.liked { color: var(--primary); }
 
         /* Radar Users Grid */
         .radar-grid {
@@ -229,22 +230,114 @@
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 12px;
+            padding: 16px 12px;
             text-align: center;
         }
 
-        .btn-sm {
-            padding: 6px 12px;
-            border-radius: 6px;
+        .btn-call {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
             border: none;
-            font-size: 12px;
+            background: var(--success);
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
             cursor: pointer;
-            margin-top: 8px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
-        .btn-call { background: var(--success); color: white; }
+        /* Profile Screen */
+        .profile-box {
+            padding: 24px 20px;
+            text-align: center;
+        }
+        .profile-dp {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            object-fit: cover;
+            margin: 0 auto 12px;
+        }
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+        .bio-text {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 8px 0 16px;
+            line-height: 1.4;
+        }
+        .edit-profile-btn {
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+        }
 
-        /* Navigation Bar */
+        /* Realistic Call Screen Overlay */
+        #call-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 60px 24px 40px;
+            text-align: center;
+        }
+
+        .call-caller-dp {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+            margin-bottom: 20px;
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+            70% { box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        .call-actions-row {
+            display: flex;
+            gap: 24px;
+        }
+        .call-btn-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            color: white;
+        }
+
+        /* Bottom Navigation */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -272,20 +365,6 @@
         }
 
         .nav-item.active { color: var(--primary); }
-
-        /* Profile Screen */
-        .profile-box {
-            padding: 30px 20px;
-            text-align: center;
-        }
-        .profile-dp {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            border: 3px solid var(--primary);
-            object-fit: cover;
-            margin: 0 auto 16px;
-        }
     </style>
 </head>
 <body>
@@ -293,7 +372,7 @@
     <!-- GOOGLE LOGIN SCREEN -->
     <div id="auth-screen" class="view-screen active">
         <div class="auth-card">
-            <h2 style="font-size: 26px; margin-bottom: 8px; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Nexon</h2>
+            <h2 style="font-size: 28px; margin-bottom: 8px; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Nexon</h2>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Connect instantly with real people nearby.</p>
             <button class="google-btn" onclick="loginWithGoogle()">
                 <i class="fa-brands fa-google" style="color: #ea4335; font-size: 18px;"></i> Continue with Google
@@ -303,7 +382,7 @@
 
     <header>
         <div class="brand-logo"><i class="fa-solid fa-globe"></i> Nexon</div>
-        <div style="font-size: 12px; color: var(--success); display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> Online</div>
+        <button class="share-btn" onclick="shareNexonApp()"><i class="fa-solid fa-share-nodes"></i> Share App</button>
     </header>
 
     <div class="app-container">
@@ -315,14 +394,13 @@
                 <button class="post-btn" onclick="addNewPost()"><i class="fa-solid fa-paper-plane"></i> Post</button>
                 <div style="clear: both;"></div>
             </div>
-
             <div id="posts-container"></div>
         </div>
 
         <!-- 2. NEARBY RADAR SCREEN -->
         <div id="radar-screen" class="view-screen">
-            <div style="padding: 16px 16px 0; font-size: 14px; font-weight: bold; color: var(--text-muted);">
-                NEARBY USERS (GPS ACTIVE)
+            <div style="padding: 16px 16px 0; font-size: 13px; font-weight: bold; color: var(--text-muted); letter-spacing: 0.5px;">
+                ACTIVE USERS NEARBY (GPS LIVE)
             </div>
             <div class="radar-grid" id="radar-users-list"></div>
         </div>
@@ -331,15 +409,45 @@
         <div id="profile-screen" class="view-screen">
             <div class="profile-box">
                 <img id="my-profile-dp" class="profile-dp" src="" alt="DP">
-                <h2 id="my-profile-name" style="font-size: 20px; margin-bottom: 4px;">User</h2>
-                <p id="my-profile-email" style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">user@gmail.com</p>
-                <div style="background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: 12px; text-align: left;">
-                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Nexon Status</div>
-                    <div style="font-size: 14px; font-weight: bold; color: var(--success);">Account Verified & Active 🚀</div>
+                <h2 id="my-profile-name" style="font-size: 20px;">User Name</h2>
+                <p id="my-profile-bio" class="bio-text">🌟 Exploring life & connecting with people on Nexon.</p>
+                <button class="edit-profile-btn" onclick="editBio()"><i class="fa-solid fa-pen"></i> Edit Bio</button>
+
+                <div class="profile-stats">
+                    <div>
+                        <div style="font-size: 18px; font-weight: bold;">128</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Posts</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 18px; font-weight: bold;">1.4k</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Followers</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 18px; font-weight: bold;">320</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Following</div>
+                    </div>
                 </div>
             </div>
         </div>
 
+    </div>
+
+    <!-- REALISTIC CALL SCREEN OVERLAY -->
+    <div id="call-screen">
+        <div>
+            <div style="font-size: 12px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;" id="call-status-label">NEXON VOICE CALL</div>
+            <h2 id="call-target-name" style="font-size: 26px;">Connecting...</h2>
+        </div>
+
+        <div>
+            <img id="call-target-dp" class="call-caller-dp" src="" alt="Caller">
+        </div>
+
+        <div class="call-actions-row">
+            <button class="call-btn-circle" style="background: var(--surface-hover);"><i class="fa-solid fa-microphone-slash"></i></button>
+            <button class="call-btn-circle" style="background: var(--danger);" onclick="endRealisticCall()"><i class="fa-solid fa-phone-slash"></i></button>
+            <button class="call-btn-circle" style="background: var(--surface-hover);"><i class="fa-solid fa-volume-high"></i></button>
+        </div>
     </div>
 
     <!-- Bottom Navigation -->
@@ -362,7 +470,8 @@
         let currentUser = {
             name: "Alex Morgan",
             email: "alex.morgan@gmail.com",
-            dp: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
+            dp: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+            bio: "🌟 Exploring life & connecting with real people nearby on Nexon."
         };
 
         let posts = [
@@ -372,7 +481,6 @@
                 dp: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150",
                 time: "2 mins ago",
                 text: "Welcome to Nexon! Explore posts or connect with nearby active users.",
-                image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600",
                 likes: 24,
                 liked: false
             }
@@ -383,19 +491,63 @@
             { id: "user_2", name: "Vikram Mehta", dp: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150", dist: "1.2 km" }
         ];
 
+        let audioCtx = null;
+        let ringInterval = null;
+
+        function playDialTone() {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            ringInterval = setInterval(() => {
+                if(!audioCtx) return;
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.2);
+            }, 3000);
+        }
+
+        function stopDialTone() {
+            if(ringInterval) clearInterval(ringInterval);
+        }
+
         function loginWithGoogle() {
-            // Instant seamless google profile simulation
             document.getElementById('auth-screen').classList.remove('active');
             document.getElementById('feed-screen').classList.add('active');
             document.getElementById('bottom-nav-bar').style.display = 'flex';
 
-            // Set Profile Data
             document.getElementById('my-profile-dp').src = currentUser.dp;
             document.getElementById('my-profile-name').innerText = currentUser.name;
-            document.getElementById('my-profile-email').innerText = currentUser.email;
+            document.getElementById('my-profile-bio').innerText = currentUser.bio;
 
             renderPosts();
             renderNearbyUsers();
+        }
+
+        function editBio() {
+            let newBio = prompt("Enter your new Bio:", currentUser.bio);
+            if(newBio) {
+                currentUser.bio = newBio;
+                document.getElementById('my-profile-bio').innerText = newBio;
+            }
+        }
+
+        function startRealisticCall(userName, userDp) {
+            document.getElementById('call-target-name').innerText = userName;
+            document.getElementById('call-target-dp').src = userDp;
+            document.getElementById('call-status-label').innerText = "RINGING...";
+            document.getElementById('call-screen').style.display = 'flex';
+            
+            playDialTone();
+        }
+
+        function endRealisticCall() {
+            stopDialTone();
+            document.getElementById('call-screen').style.display = 'none';
         }
 
         function renderPosts() {
@@ -413,7 +565,6 @@
                         </div>
                     </div>
                     <div class="post-content">${p.text}</div>
-                    ${p.image ? `<img src="${p.image}" class="post-image" />` : ''}
                     <div class="post-actions">
                         <button class="post-action-btn ${p.liked ? 'liked' : ''}" onclick="toggleLike(${p.id})">
                             <i class="fa-solid fa-heart"></i> ${p.likes} Likes
@@ -436,7 +587,6 @@
                 dp: currentUser.dp,
                 time: "Just now",
                 text: val,
-                image: "",
                 likes: 0,
                 liked: false
             });
@@ -464,7 +614,7 @@
                     <img src="${u.dp}" class="avatar-img" style="margin: 0 auto 8px;" />
                     <div style="font-weight: bold; font-size: 13px;">${u.name}</div>
                     <div style="font-size: 10px; color: var(--text-muted);">${u.dist} away</div>
-                    <button class="btn-sm btn-call" onclick="alert('Calling ${u.name}...')"><i class="fa-solid fa-phone"></i> Call</button>
+                    <button class="btn-call" onclick="startRealisticCall('${u.name}', '${u.dp}')"><i class="fa-solid fa-phone"></i> Call</button>
                 `;
                 grid.appendChild(card);
             });
@@ -476,7 +626,19 @@
             document.getElementById(tabId).classList.add('active');
             btn.classList.add('active');
         }
+
+        function shareNexonApp() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Nexon App',
+                    text: 'Connect instantly with nearby people on Nexon!',
+                    url: window.location.href
+                });
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert('App link copied to clipboard!');
+            }
+        }
     </script>
 </body>
-    </html>
-    
+</html>
